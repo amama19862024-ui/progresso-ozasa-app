@@ -1,4 +1,4 @@
-import { db } from "./firebase.js";
+import { db, auth } from "./firebase.js";
 
 import {
   collection,
@@ -10,90 +10,69 @@ import {
   doc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-/* =========================
-   コーチ認証（簡易）
-========================= */
-const COACH_PASSWORD = "1234"; // ←ここ好きな数字に変更OK
-let isCoach = false;
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 /* =========================
-   ログイン処理
+   ログイン状態
 ========================= */
-function coachLogin() {
-
-  const input = prompt("コーチパスワードを入力してください");
-
-  if (input === COACH_PASSWORD) {
-    isCoach = true;
-    alert("コーチモードON");
-  } else {
-    alert("パスワードが違います");
-  }
-}
+let user = null;
 
 /* =========================
-   お知らせ読み込み
+   Googleログイン
 ========================= */
-async function loadAnnouncements() {
+window.login = async function () {
 
-  const container =
-    document.getElementById("announcements");
-
-  if (!container) return;
+  const provider = new GoogleAuthProvider();
 
   try {
 
-    const q = query(
-      collection(db, "announcements"),
-      orderBy("createdAt", "desc")
-    );
+    const result = await signInWithPopup(auth, provider);
+    user = result.user;
 
-    const snapshot = await getDocs(q);
+    alert("ログイン成功：" + user.displayName);
 
-    let html = "";
-
-    snapshot.forEach((docSnap) => {
-
-      const data = docSnap.data();
-      const id = docSnap.id;
-
-      const date = new Date(data.createdAt).toLocaleString("ja-JP");
-
-      html += `
-        <div>
-          <h3>${data.title}</h3>
-          <p>${data.content}</p>
-          <small>${date}</small>
-
-          ${isCoach ? `<button onclick="deleteAnnouncement('${id}')">削除</button>` : ""}
-
-          <hr>
-        </div>
-      `;
-    });
-
-    if (html === "") {
-      html = "<p>まだお知らせはありません</p>";
-    }
-
-    container.innerHTML = html;
+    loadAnnouncements();
 
   } catch (error) {
 
     console.error(error);
-
-    container.innerHTML =
-      "お知らせの取得に失敗しました";
+    alert("ログイン失敗");
   }
-}
+};
 
 /* =========================
-   投稿（コーチのみ）
+   ログアウト
+========================= */
+window.logout = async function () {
+
+  await signOut(auth);
+  user = null;
+
+  alert("ログアウトしました");
+
+  loadAnnouncements();
+};
+
+/* =========================
+   認証監視
+========================= */
+onAuthStateChanged(auth, (u) => {
+  user = u;
+  loadAnnouncements();
+});
+
+/* =========================
+   投稿
 ========================= */
 async function postAnnouncement() {
 
-  if (!isCoach) {
-    alert("コーチのみ投稿できます");
+  if (!user) {
+    alert("ログインしてください");
     return;
   }
 
@@ -104,74 +83,88 @@ async function postAnnouncement() {
     document.getElementById("content").value;
 
   if (!title || !content) {
-    alert("タイトルと内容を入力してください");
+    alert("入力してください");
     return;
   }
 
-  try {
+  await addDoc(collection(db, "announcements"), {
+    title,
+    content,
+    createdAt: new Date().toISOString(),
+    uid: user.uid,
+    name: user.displayName
+  });
 
-    await addDoc(
-      collection(db, "announcements"),
-      {
-        title,
-        content,
-        createdAt: new Date().toISOString()
-      }
-    );
-
-    document.getElementById("message")
-      .innerText = "投稿完了！";
-
-    location.reload();
-
-  } catch (error) {
-
-    console.error(error);
-
-    document.getElementById("message")
-      .innerText = "投稿失敗";
-  }
+  alert("投稿完了");
+  location.reload();
 }
 
 /* =========================
-   削除（コーチのみ）
+   削除
 ========================= */
-window.deleteAnnouncement = async function(id) {
+window.deleteAnnouncement = async function (id, uid) {
 
-  if (!isCoach) {
-    alert("コーチのみ削除できます");
+  if (!user || user.uid !== uid) {
+    alert("削除権限がありません");
     return;
   }
 
   if (!confirm("削除しますか？")) return;
 
-  try {
+  await deleteDoc(doc(db, "announcements", id));
 
-    await deleteDoc(doc(db, "announcements", id));
-
-    alert("削除しました");
-
-    location.reload();
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert("削除失敗");
-  }
+  alert("削除しました");
+  location.reload();
 };
+
+/* =========================
+   読み込み
+========================= */
+async function loadAnnouncements() {
+
+  const container = document.getElementById("announcements");
+
+  if (!container) return;
+
+  const q = query(
+    collection(db, "announcements"),
+    orderBy("createdAt", "desc")
+  );
+
+  const snapshot = await getDocs(q);
+
+  let html = "";
+
+  snapshot.forEach((docSnap) => {
+
+    const data = docSnap.data();
+    const id = docSnap.id;
+
+    const date = new Date(data.createdAt).toLocaleString("ja-JP");
+
+    html += `
+      <div>
+        <h3>${data.title}</h3>
+        <p>${data.content}</p>
+        <small>${date}</small>
+
+        ${user && user.uid === data.uid
+          ? `<button onclick="deleteAnnouncement('${id}','${data.uid}')">削除</button>`
+          : ""
+        }
+
+        <hr>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
 
 /* =========================
    初期化
 ========================= */
 document.addEventListener("DOMContentLoaded", () => {
-
-  // コーチログインボタン（ページ読み込み時に一度だけ）
-  const login = confirm("コーチとしてログインしますか？");
-
-  if (login) {
-    coachLogin();
-  }
 
   const btn = document.getElementById("postBtn");
 
