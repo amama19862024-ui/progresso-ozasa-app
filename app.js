@@ -1,6 +1,6 @@
 import { db } from "./firebase.js";
 
-import {
+import { 
   collection,
   getDocs,
   addDoc
@@ -106,3 +106,5 @@ document
   .addEventListener("click", () => {
     alert("ボタン押された！");
   });
+
+alert("app.jsの最後まで実行された");
