@@ -1,3 +1,4 @@
+alert("app.js 読み込み成功");
 import { db } from "./firebase.js";
 
 import {
