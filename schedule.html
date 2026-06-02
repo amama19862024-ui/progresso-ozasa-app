@@ -3,25 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <title>スケジュール</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    input, textarea { width: 100%; margin: 5px 0; padding: 8px; }
+    button { padding: 10px; margin-top: 10px; }
+    .item { border: 1px solid #ccc; padding: 10px; margin-top: 10px; }
+  </style>
 </head>
+
 <body>
 
-<h2>スケジュール追加（コーチ用）</h2>
+<h1>⚽ スケジュール</h1>
 
-<input id="title" placeholder="タイトル（練習・試合）"><br><br>
-<input id="date" type="date"><br><br>
-<input id="time" placeholder="時間（例：18:00-20:00）"><br><br>
-<input id="place" placeholder="場所"><br><br>
-<textarea id="memo" placeholder="メモ"></textarea><br><br>
+<h2>追加（コーチ用）</h2>
+
+<input id="title" placeholder="タイトル（練習・試合）">
+<input id="date" type="date">
+<input id="time" placeholder="時間（例：18:00-20:00）">
+<input id="place" placeholder="場所">
+<textarea id="memo" placeholder="メモ"></textarea>
 
 <button onclick="addSchedule()">追加</button>
 
 <hr>
 
-<h2>スケジュール一覧</h2>
+<h2>一覧</h2>
 <div id="list">読み込み中...</div>
 
-<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -34,18 +42,17 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* 🔥 ここだけあなたのFirebaseに差し替え */
 const firebaseConfig = {
-  apiKey: "AIzaSyA3CIViJgCoyP-WCs_YFAFchlLWKxoFM-Y",
-  authDomain: "progresso-ozasa.firebaseapp.com",
-  projectId: "progresso-ozasa",
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* -------------------------
-   スケジュール追加
-------------------------- */
+/* 追加 */
 window.addSchedule = async function () {
   const title = document.getElementById("title").value;
   const date = document.getElementById("date").value;
@@ -58,27 +65,24 @@ window.addSchedule = async function () {
     return;
   }
 
-  await addDoc(collection(db, "schedules"), {
-    title,
-    date,
-    time,
-    place,
-    memo,
-    createdAt: serverTimestamp()
-  });
+  try {
+    await addDoc(collection(db, "schedules"), {
+      title,
+      date,
+      time,
+      place,
+      memo,
+      createdAt: serverTimestamp()
+    });
 
-  alert("追加しました！");
-
-  document.getElementById("title").value = "";
-  document.getElementById("date").value = "";
-  document.getElementById("time").value = "";
-  document.getElementById("place").value = "";
-  document.getElementById("memo").value = "";
+    alert("追加しました！");
+  } catch (e) {
+    alert("エラー：" + e.message);
+    console.error(e);
+  }
 };
 
-/* -------------------------
-   一覧表示（リアルタイム）
-------------------------- */
+/* 一覧表示 */
 const q = query(collection(db, "schedules"), orderBy("date", "asc"));
 
 onSnapshot(q, (snapshot) => {
@@ -86,7 +90,7 @@ onSnapshot(q, (snapshot) => {
   list.innerHTML = "";
 
   if (snapshot.empty) {
-    list.innerHTML = "まだ予定がありません";
+    list.innerHTML = "まだスケジュールはありません";
     return;
   }
 
@@ -94,13 +98,8 @@ onSnapshot(q, (snapshot) => {
     const d = doc.data();
 
     list.innerHTML += `
-      <div style="
-        border:1px solid #ccc;
-        padding:10px;
-        margin:10px 0;
-        border-radius:8px;
-      ">
-        <b>📅 ${d.date || ""} ${d.time || ""}</b><br>
+      <div class="item">
+        <b>${d.date || ""} ${d.time || ""}</b><br>
         ⚽ ${d.title || ""}<br>
         📍 ${d.place || ""}<br>
         📝 ${d.memo || ""}
@@ -108,9 +107,8 @@ onSnapshot(q, (snapshot) => {
     `;
   });
 });
+
 </script>
 
 </body>
 </html>
-
-<h1>画面テスト</h1>
