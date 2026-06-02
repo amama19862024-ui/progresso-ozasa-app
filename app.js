@@ -6,7 +6,9 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-async function loadAnnouncements();
+async function loadAnnouncements() {
+  
+
 
   const container =
     document.getElementById("announcements");
@@ -42,7 +44,7 @@ async function loadAnnouncements();
   }
 }
 
-loadAnnouncements);
+loadAnnouncements();
 
 const title =
   document.getElementById("title").value;
