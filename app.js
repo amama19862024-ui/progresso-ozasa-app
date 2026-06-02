@@ -25,16 +25,19 @@ async function loadAnnouncements() {
 
     snapshot.forEach((doc) => {
 
-      const data = doc.data();
+  const data = doc.data();
 
-      html += `
-        <div>
-          <h3>${data.title}</h3>
-          <p>${data.content}</p>
-          <hr>
-        </div>
-      `;
-    });
+  const date = new Date(data.createdAt).toLocaleString("ja-JP");
+
+  html += `
+    <div>
+      <h3>${data.title}</h3>
+      <p>${data.content}</p>
+      <small>${date}</small>
+      <hr>
+    </div>
+  `;
+});
 
     if (html === "") {
       html = "<p>まだお知らせはありません</p>";
