@@ -52,6 +52,8 @@ async function loadAnnouncements() {
 // 投稿処理
 window.postAnnouncement = async function () {
 
+  alert("投稿処理スタート");
+
   const titleInput =
     document.getElementById("title");
 
