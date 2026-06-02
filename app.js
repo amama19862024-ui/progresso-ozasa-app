@@ -96,3 +96,7 @@ window.postAnnouncement = async function () {
 };
 
 loadAnnouncements();
+
+document
+  .getElementById("postBtn")
+  .addEventListener("click", window.postAnnouncement);
