@@ -76,7 +76,7 @@ async function postAnnouncement() {
       {
         title,
         content,
-        createdAt: Date.now()
+        createdAt: new Date().toISOString()
       }
     );
 
