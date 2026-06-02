@@ -100,3 +100,9 @@ loadAnnouncements();
 document
   .getElementById("postBtn")
   .addEventListener("click", window.postAnnouncement);
+
+document
+  .getElementById("postBtn")
+  .addEventListener("click", () => {
+    alert("ボタン押された！");
+  });
