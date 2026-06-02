@@ -1,4 +1,4 @@
-import { db } from "./firebase.js";
+らimport { db } from "./firebase.js";
 
 import {
   collection,
@@ -41,4 +41,40 @@ async function loadAnnouncements() {
   }
 }
 
-loadAnnouncements();
+loadAnnouncements);
+
+const title =
+  document.getElementById("title").value;
+
+const content =
+  document.getElementById("content").value;
+
+if (!title || !content) {
+  alert("タイトルと内容を入力してください");
+  return;
+}
+
+try {
+
+  await addDoc(
+    collection(db, "announcements"),
+    {
+      title,
+      content,
+      createdAt: Date.now()
+    }
+  );
+
+  document.getElementById("message")
+    .innerText = "投稿完了！";
+
+  location.reload();
+
+} catch (error) {
+
+  console.error(error);
+
+  document.getElementById("message")
+    .innerText = "投稿失敗";
+}
+
