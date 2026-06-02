@@ -3,7 +3,9 @@ import { db } from "./firebase.js";
 import {
   collection,
   getDocs,
-  addDoc
+  addDoc,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 /* =========================
@@ -18,26 +20,30 @@ async function loadAnnouncements() {
 
   try {
 
-    const snapshot =
-      await getDocs(collection(db, "announcements"));
+    const q = query(
+      collection(db, "announcements"),
+      orderBy("createdAt", "desc")
+    );
+
+    const snapshot = await getDocs(q);
 
     let html = "";
 
     snapshot.forEach((doc) => {
 
-  const data = doc.data();
+      const data = doc.data();
 
-  const date = new Date(data.createdAt).toLocaleString("ja-JP");
+      const date = new Date(data.createdAt).toLocaleString("ja-JP");
 
-  html += `
-    <div>
-      <h3>${data.title}</h3>
-      <p>${data.content}</p>
-      <small>${date}</small>
-      <hr>
-    </div>
-  `;
-});
+      html += `
+        <div>
+          <h3>${data.title}</h3>
+          <p>${data.content}</p>
+          <small>${date}</small>
+          <hr>
+        </div>
+      `;
+    });
 
     if (html === "") {
       html = "<p>まだお知らせはありません</p>";
@@ -98,7 +104,7 @@ async function postAnnouncement() {
 }
 
 /* =========================
-   イベント登録
+   初期化
 ========================= */
 document.addEventListener("DOMContentLoaded", () => {
 
