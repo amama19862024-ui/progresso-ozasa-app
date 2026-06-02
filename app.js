@@ -1,12 +1,14 @@
 import { db } from "./firebase.js";
 
-import { 
+import {
   collection,
   getDocs,
   addDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-// お知らせ一覧取得
+/* =========================
+   お知らせ読み込み
+========================= */
 async function loadAnnouncements() {
 
   const container =
@@ -42,30 +44,25 @@ async function loadAnnouncements() {
 
   } catch (error) {
 
-    console.error(error);
+    console.error("読み込みエラー:", error);
 
     container.innerHTML =
       "お知らせの取得に失敗しました";
   }
 }
 
-// 投稿処理
-window.postAnnouncement = async function () {
+/* =========================
+   投稿処理
+========================= */
+async function postAnnouncement() {
 
   alert("投稿処理スタート");
 
-  const titleInput =
-    document.getElementById("title");
+  const title =
+    document.getElementById("title").value;
 
-  const contentInput =
-    document.getElementById("content");
-
-  if (!titleInput || !contentInput) {
-    return;
-  }
-
-  const title = titleInput.value;
-  const content = contentInput.value;
+  const content =
+    document.getElementById("content").value;
 
   if (!title || !content) {
     alert("タイトルと内容を入力してください");
@@ -90,23 +87,23 @@ window.postAnnouncement = async function () {
 
   } catch (error) {
 
-    console.error(error);
+    console.error("投稿エラー:", error);
 
     document.getElementById("message")
       .innerText = "投稿失敗";
   }
-};
+}
 
-loadAnnouncements();
+/* =========================
+   イベント登録
+========================= */
+document.addEventListener("DOMContentLoaded", () => {
 
-document
-  .getElementById("postBtn")
-  .addEventListener("click", window.postAnnouncement);
+  const btn = document.getElementById("postBtn");
 
-document
-  .getElementById("postBtn")
-  .addEventListener("click", () => {
-    alert("ボタン押された！");
-  });
+  if (btn) {
+    btn.addEventListener("click", postAnnouncement);
+  }
 
-alert("app.jsの最後まで実行された");
+  loadAnnouncements();
+});
